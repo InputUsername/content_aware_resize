@@ -3,32 +3,35 @@ use std::env;
 use image::{DynamicImage, RgbImage, ColorType};
 
 fn energy(img: &RgbImage, x: u32, y: u32) -> u32 {
-    // let (w, h) = img.dimensions();
+    let (w, h) = img.dimensions();
 
-    // let h1 = if x == 0 { 0 } else { x - 1 };
-    // let h2 = (x + 1).min(w - 1);
-    // let v1 = if y == 0 { 0 } else { y - 1 };
-    // let v2 = (y + 1).min(h - 1);
+    let h1 = x.saturating_sub(1);
+    let h2 = (x + 1).min(w - 1);
+    let v1 = y.saturating_sub(1);
+    let v2 = (y + 1).min(h - 1);
 
-    // let h1 = &img.get_pixel(h1, y).data;
-    // let h2 = &img.get_pixel(h2, y).data;
-    // let v1 = &img.get_pixel(x, v1).data;
-    // let v2 = &img.get_pixel(x, v2).data;
+    let ph1 = &img.get_pixel(h1, y).data;
+    let ph2 = &img.get_pixel(h2, y).data;
+    let pv1 = &img.get_pixel(x, v1).data;
+    let pv2 = &img.get_pixel(x, v2).data;
 
-    // let mut dx = 0;
-    // let mut dy = 0;
+    let mut dx = 0;
+    let mut dy = 0;
 
-    // for i in 0..3 {
-    //     let dh = (h1[i] as i16) - (h2[i] as i16);
-    //     let dv = (v1[i] as i16) - (v2[i] as i16);
+    for i in 0..3 {
+        let ha = ph1[i].max(ph2[i]);
+        let hb = ph1[i].min(ph2[i]);
+        let va = pv1[i].max(pv2[i]);
+        let vb = pv1[i].min(pv2[i]);
 
-    //     dx += (dh * dh) as u32;
-    //     dy += (dv * dv) as u32;
-    // }
+        let dh = (ha - hb) as u32;
+        let dv = (va - vb) as u32;
 
-    // return dx + dy;
+        dx += dh * dh;
+        dy += dv * dv;
+    }
 
-    return if x % 25 == 0 { 1 } else { 0 };
+    return dx + dy;
 }
 
 fn main() {
