@@ -1,4 +1,5 @@
 use std::env;
+use std::io;
 
 use image::{DynamicImage, RgbImage, ColorType};
 
@@ -34,35 +35,35 @@ fn energy(img: &RgbImage, x: u32, y: u32) -> u32 {
     return dx + dy;
 }
 
+fn dump_energy_image(img: &RgbImage) -> io::Result<()> {
+    let mut min = energy(img, 0, 0);
+    let mut max = min;
+    let energies: Vec<f32> = img.enumerate_pixels()
+        .map(|(x, y, _)| {
+            let e = energy(img, x, y);
+            min = u32::min(min, e);
+            max = u32::max(max, e);
+            e as f32
+        })
+        .collect();
+    let min = min as f32;
+    let max = max as f32;
+    let output: Vec<u8> = energies.into_iter()
+        .map(|e| (255.0 * (e - min) / (max - min)) as u8)
+        .collect();
+    let (w, h) = img.dimensions();
+
+    image::save_buffer("images/energy.png", &output, w, h, ColorType::Gray(8))
+}
+
 fn main() {
     let file = env::args().nth(1).expect("Expected a file");
     let img = image::open(file).expect("Failed to open image");
-
-    let img_buf = if let DynamicImage::ImageRgb8(buf) = img {
+    let img = if let DynamicImage::ImageRgb8(buf) = img {
         buf
     } else {
         img.to_rgb()
     };
 
-    let mut cur_min = energy(&img_buf, 0, 0);
-    let mut cur_max = cur_min;
-    let e_buf: Vec<f32> = img_buf.enumerate_pixels()
-        .map(|(x, y, _)| {
-            let e = energy(&img_buf, x, y);
-            cur_min = cur_min.min(e);
-            cur_max = cur_max.max(e);
-            e as f32
-        })
-        .collect();
-    
-    let range = (cur_max - cur_min) as f32;
-    let output: Vec<u8> = e_buf.into_iter()
-        .map(|e| (255.0 * (e - (cur_min as f32)) / range) as u8)
-        .collect();
-    
-    image::save_buffer(
-        "energy.png", &output,
-        img_buf.width(), img_buf.height(),
-        ColorType::Gray(8)
-    ).unwrap();
+    dump_energy_image(&img).unwrap();
 }
