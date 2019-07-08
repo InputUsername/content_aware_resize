@@ -1,37 +1,9 @@
+mod energy_function;
+
 use std::env;
 use std::io;
 
 use image::{DynamicImage, ColorType};
-
-fn energy(img: &[&[u8]], w: usize, h: usize, x: usize, y: usize) -> u32 {
-    let h1 = x.saturating_sub(1);
-    let h2 = (x + 1).min(w - 1);
-    let v1 = y.saturating_sub(1);
-    let v2 = (y + 1).min(h - 1);
-
-    let ph1 = &img[y][3*h1..3*h1+3];
-    let ph2 = &img[y][3*h2..3*h2+3];
-    let pv1 = &img[v1][3*x..3*x+3];
-    let pv2 = &img[v2][3*x..3*x+3];
-
-    let mut dx = 0;
-    let mut dy = 0;
-
-    for i in 0..3 {
-        let ha = ph1[i].max(ph2[i]);
-        let hb = ph1[i].min(ph2[i]);
-        let va = pv1[i].max(pv2[i]);
-        let vb = pv1[i].min(pv2[i]);
-
-        let dh = (ha - hb) as u32;
-        let dv = (va - vb) as u32;
-
-        dx += dh * dh;
-        dy += dv * dv;
-    }
-
-    return dx + dy;
-}
 
 struct Energy {
     value: u32,
@@ -85,13 +57,13 @@ fn find_min_energy_seam<F>(img: &[&[u8]], w: usize, h: usize, energy_function: F
 }
 
 fn dump_energy_image(img: &[&[u8]], w: usize, h: usize) -> io::Result<()> {
-    let mut min = energy(img, w, h, 0, 0);
+    let mut min = energy_function::basic(img, w, h, 0, 0);
     let mut max = min;
 
     let energies: Vec<f32> =
         (0..w*h).map(|i| (i % w, i / w))
         .map(|(x, y)| {
-            let e = energy(img, w, h, x, y);
+            let e = energy_function::basic(img, w, h, x, y);
             min = u32::min(min, e);
             max = u32::max(max, e);
             e as f32
