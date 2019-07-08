@@ -33,6 +33,57 @@ fn energy(img: &[&[u8]], w: usize, h: usize, x: usize, y: usize) -> u32 {
     return dx + dy;
 }
 
+struct Energy {
+    value: u32,
+    backptr: usize
+}
+
+fn find_min_energy_seam<F>(img: &[&[u8]], w: usize, h: usize, energy_function: F) -> Vec<usize>
+    where F: Fn(&[&[u8]], usize, usize, usize, usize) -> u32
+{
+    let mut energy_buf: Vec<Energy> = Vec::with_capacity(w * h);
+    for x in 0..w {
+        energy_buf.push(Energy {
+            value: energy_function(img, w, h, x, 0),
+            backptr: 0
+        });
+    }
+
+    for y in 1..h {
+        for x in 0..w {
+            let prev_row_start = (y - 1) * w;
+            let lo = x.saturating_sub(1);
+            let hi = usize::min(x + 1, w - 1) + 1;
+
+            let (prev_min, prev_min_x) = energy_buf[prev_row_start + lo..prev_row_start + hi].iter()
+                .zip(lo..hi)
+                .min_by_key(|(e, _)| e.value)
+                .unwrap();
+            let prev_min_value = prev_min.value;
+
+            energy_buf.push(Energy {
+                value: prev_min_value + energy_function(img, w, h, x, y),
+                backptr: prev_min_x
+            });
+        }
+    }
+
+    let mut seam = Vec::with_capacity(h);
+
+    let last_row_start = (h - 1)*w;
+    let (mut seam_x_pos, _) = energy_buf[last_row_start..].iter()
+        .enumerate()
+        .min_by_key(|(_, e)| e.value)
+        .unwrap();
+
+    for y in (0..h).rev() {
+        seam.push(seam_x_pos);
+        seam_x_pos = energy_buf[y * w + seam_x_pos].backptr;
+    }
+
+    seam
+}
+
 fn dump_energy_image(img: &[&[u8]], w: usize, h: usize) -> io::Result<()> {
     let mut min = energy(img, w, h, 0, 0);
     let mut max = min;
@@ -72,4 +123,26 @@ fn main() {
     let view: Vec<&[u8]> = raw_img.chunks_exact(3 * w).collect();
 
     dump_energy_image(&view, w, h).unwrap();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_find_min_energy_seam() {
+        const ENERGIES: &[&[u32]] = &[
+            &[9, 9, 0, 9, 9],
+            &[9, 1, 9, 8, 9],
+            &[9, 9, 9, 9, 0],
+            &[9, 9, 9, 0, 9]
+        ];
+
+        let w = ENERGIES[0].len();
+        let h = ENERGIES.len();
+
+        let seam = find_min_energy_seam(&[&[]], w, h, |_img, _w, _h, x, y| ENERGIES[y][x]);
+
+        assert_eq!(seam, [3, 4, 3, 2]);
+    }
 }
