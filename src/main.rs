@@ -27,7 +27,7 @@ fn find_min_energy_seam<F>(img: &[&[u8]], w: usize, h: usize, energy_function: F
             let lo = x.saturating_sub(1);
             let hi = usize::min(x + 1, w - 1) + 1;
 
-            let (prev_min, prev_min_x) = energy_buf[prev_row_start + lo..prev_row_start + hi].iter()
+            let (prev_min, prev_min_x) = energy_buf[prev_row_start + lo .. prev_row_start + hi].iter()
                 .zip(lo..hi)
                 .min_by_key(|(e, _)| e.value)
                 .unwrap();
@@ -101,19 +101,18 @@ fn main() {
 mod tests {
     use super::*;
 
+    const ENERGIES: &[&[u32]] = &[
+        &[9, 9, 0, 9, 9],
+        &[9, 1, 9, 8, 9],
+        &[9, 9, 9, 9, 0],
+        &[9, 9, 9, 0, 9]
+    ];
+    const W: usize = 5;
+    const H: usize = 4;
+
     #[test]
     fn test_find_min_energy_seam() {
-        const ENERGIES: &[&[u32]] = &[
-            &[9, 9, 0, 9, 9],
-            &[9, 1, 9, 8, 9],
-            &[9, 9, 9, 9, 0],
-            &[9, 9, 9, 0, 9]
-        ];
-
-        let w = ENERGIES[0].len();
-        let h = ENERGIES.len();
-
-        let seam = find_min_energy_seam(&[&[]], w, h, |_img, _w, _h, x, y| ENERGIES[y][x]);
+        let seam = find_min_energy_seam(&[&[]], W, H, |_img, _w, _h, x, y| ENERGIES[y][x]);
 
         assert_eq!(seam, [3, 4, 3, 2]);
     }
