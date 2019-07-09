@@ -6,7 +6,7 @@ use std::io;
 
 use image::{DynamicImage, ColorType};
 
-fn dump_energy_image(img: &[&[u8]], w: usize, h: usize) -> io::Result<()> {
+fn dump_energy_image(img: &[u8], w: usize, h: usize) -> io::Result<()> {
     let mut min = energy_function::basic(img, w, h, 0, 0);
     let mut max = min;
 
@@ -41,8 +41,7 @@ fn main() {
 
     let w = img.width() as usize;
     let h = img.height() as usize;
-    let raw_img = img.into_raw();
-    let view: Vec<&[u8]> = raw_img.chunks_exact(3 * w).collect();
+    let img = img.into_raw();
 
-    dump_energy_image(&view, w, h).unwrap();
+    dump_energy_image(&img, w, h).unwrap();
 }
