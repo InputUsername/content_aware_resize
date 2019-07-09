@@ -30,6 +30,19 @@ fn dump_energy_image(img: &[u8], w: usize, h: usize) -> io::Result<()> {
     image::save_buffer("images/energy.png", &output, w as u32, h as u32, ColorType::Gray(8))
 }
 
+fn content_aware_resize(img: &mut Vec<u8>, w: usize, h: usize, new_w: usize) {
+    assert!(new_w < w);
+
+    let mut cur_w = w;
+    while cur_w > new_w {
+        seam::remove_min_energy_seam(img, cur_w, h, energy_function::basic);
+
+        cur_w -= 1;
+
+        img.truncate(3 * cur_w * h);
+    }
+}
+
 fn main() {
     let file = env::args().nth(1).expect("Expected a file");
     let img = image::open(file).expect("Failed to open image");
@@ -41,7 +54,7 @@ fn main() {
 
     let w = img.width() as usize;
     let h = img.height() as usize;
-    let img = img.into_raw();
+    let mut img = img.into_raw();
 
-    dump_energy_image(&img, w, h).unwrap();
+    // TODO: resize
 }
