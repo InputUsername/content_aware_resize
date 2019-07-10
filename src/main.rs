@@ -1,8 +1,7 @@
 mod energy_function;
 mod seam;
 
-use std::process;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::io;
 use std::time::{Instant, Duration};
 
@@ -82,19 +81,77 @@ fn main() {
             .help("The input image")
             .required(true)
             .index(1))
+        .arg(Arg::with_name("OUTPUT")
+            .help("The output file")
+            .required(true)
+            .index(2))
         .arg(Arg::with_name("width")
             .help("The new width of the result image")
             .required(true)
             .short("w")
             .long("width")
             .takes_value(true))
-        .arg(Arg::with_name("output")
-            .help("The output file")
-            .short("o")
-            .long("output"))
         .arg(Arg::with_name("energy")
             .help("Dump an image containing the energy of the input image")
             .short("e")
             .long("energy"))
         .get_matches();
+
+    let input_file = matches.value_of("INPUT").unwrap();
+    let input_path = Path::new(input_file);
+
+    let output_file = matches.value_of("OUTPUT").unwrap();
+    let output_path = Path::new(output_file);
+
+    let img = match image::open(input_path) {
+        Ok(img) => img,
+        Err(_err) => {
+            eprintln!("Could not open the input image");
+            return;
+        }
+    };
+    let img = if let DynamicImage::ImageRgb8(buf) = img {
+        buf
+    } else {
+        img.to_rgb()
+    };
+
+    let new_w = matches.value_of("width").unwrap();
+    let new_w: usize = match new_w.parse() {
+        Ok(val) => val,
+        Err(_err) => {
+            eprintln!("New width must be an integer");
+            return;
+        }
+    };
+
+    let w = img.width() as usize;
+    let h = img.height() as usize;
+    let mut img = img.into_raw();
+
+    if matches.is_present("energy") {
+        match dump_energy_image(&img, w, h) {
+            Ok(_) => (),
+            Err(_err) => {
+                eprintln!("Failed to dump energy image");
+                return;
+            }
+        }
+    }
+
+    let start = Instant::now();
+
+    content_aware_resize(&mut img, w, h, new_w);
+
+    assert_eq!(img.len(), 3 * new_w * h);
+
+    match image::save_buffer(output_path, &img, new_w as u32, h as u32, ColorType::RGB(8)) {
+        Ok(_) => (),
+        Err(_err) => {
+            eprintln!("Could not save output image");
+            return;
+        }
+    }
+
+    print_duration(&start.elapsed());
 }
