@@ -1,11 +1,14 @@
 mod energy_function;
 mod seam;
 
-use std::env;
+use std::process;
+use std::path::{Path, PathBuf};
 use std::io;
 use std::time::{Instant, Duration};
 
 use image::{DynamicImage, ColorType};
+
+use clap::{App, Arg, crate_version};
 
 fn dump_energy_image(img: &[u8], w: usize, h: usize) -> io::Result<()> {
     let mut min = energy_function::basic(img, w, h, 0, 0);
@@ -71,27 +74,27 @@ fn print_duration(duration: &Duration) {
 }
 
 fn main() {
-    let file = env::args().nth(1).expect("Expected a file");
-    let img = image::open(file).expect("Failed to open image");
-    let img = if let DynamicImage::ImageRgb8(buf) = img {
-        buf
-    } else {
-        img.to_rgb()
-    };
-
-    let w = img.width() as usize;
-    let h = img.height() as usize;
-    let mut img = img.into_raw();
-
-    let new_w = 896;
-
-    let start = Instant::now();
-
-    content_aware_resize(&mut img, w, h, new_w);
-
-    assert_eq!(img.len(), 3 * new_w * h);
-
-    image::save_buffer("images/arch_small.png", &img, new_w as u32, h as u32, ColorType::RGB(8)).unwrap();
-
-    print_duration(&start.elapsed());
+    let matches = App::new("content_aware_resize")
+        .version(crate_version!())
+        .about("Resize images while taking their content into account")
+        .author("Koen Bolhuis")
+        .arg(Arg::with_name("INPUT")
+            .help("The input image")
+            .required(true)
+            .index(1))
+        .arg(Arg::with_name("width")
+            .help("The new width of the result image")
+            .required(true)
+            .short("w")
+            .long("width")
+            .takes_value(true))
+        .arg(Arg::with_name("output")
+            .help("The output file")
+            .short("o")
+            .long("output"))
+        .arg(Arg::with_name("energy")
+            .help("Dump an image containing the energy of the input image")
+            .short("e")
+            .long("energy"))
+        .get_matches();
 }
