@@ -5,6 +5,10 @@ struct Energy {
     backptr: usize
 }
 
+/// Finds the (vertical) minimal energy seam as determined
+/// by `energy_function`. The resulting vector will contain
+/// the horizontal positions of the pixels making up the seam,
+/// in reverse order (bottom to top) of the image.
 pub fn find_min_energy_seam<F>(img: &[u8], w: usize, h: usize, energy_function: F) -> Vec<usize>
     where F: Fn(&[u8], usize, usize, usize, usize) -> u32
 {
@@ -51,6 +55,10 @@ pub fn find_min_energy_seam<F>(img: &[u8], w: usize, h: usize, energy_function: 
     seam
 }
 
+/// Finds and removes the (vertical) minimal energy seam as determined
+/// by `energy_function`; the resulting image will be contained in the
+/// first `(w - 1) * h` pixels of `img`. Afterwards the container can
+/// be safely resized to `(w - 1) * h` without losing data.
 pub fn remove_min_energy_seam<F>(img: &mut [u8], w: usize, h: usize, energy_function: F)
     where F: Fn(&[u8], usize, usize, usize, usize) -> u32
 {

@@ -1,7 +1,13 @@
+//! Energy functions determine the "energy" of a pixel
+//! in an image in order to be able to find the seam
+//! of pixels with minimal total energy.
+
 fn abs_diff(a: u8, b: u8) -> u8 {
     if a > b { a - b } else { b - a }
 }
 
+/// Returns the energy of a pixel based on the sum of squared
+/// differences between the color channels of neighboring pixels.
 pub fn basic(img: &[u8], w: usize, h: usize, x: usize, y: usize) -> u32 {
     let h1 = x.saturating_sub(1);
     let h2 = usize::min(x + 1, w - 1);
