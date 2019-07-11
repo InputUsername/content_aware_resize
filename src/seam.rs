@@ -22,11 +22,14 @@ pub fn find_min_energy_seam<F>(img: &[u8], w: usize, h: usize, energy_function: 
 
     for y in 1..h {
         for x in 0..w {
-            let prev_row_start = (y - 1) * w;
             let lo = x.saturating_sub(1);
             let hi = usize::min(x + 1, w - 1) + 1;
 
-            let (prev_min, prev_min_x) = energy_buf[prev_row_start + lo .. prev_row_start + hi].iter()
+            let prev_row_start = (y - 1) * w;
+            let lo_idx = prev_row_start + lo;
+            let hi_idx = prev_row_start + hi;
+
+            let (prev_min, prev_min_x) = energy_buf[lo_idx .. hi_idx].iter()
                 .zip(lo..hi)
                 .min_by_key(|(e, _)| e.value)
                 .unwrap();
@@ -71,7 +74,7 @@ pub fn remove_min_energy_seam<F>(img: &mut [u8], w: usize, h: usize, energy_func
         assert!(x_idx <= 3 * w * h);
 
         // move all pixels after the seam one position to the left
-        copy_in_place(img, x_idx + 3 .. 3 * w * h, x_idx);
+        copy_in_place(img, (x_idx + 3) .. (3 * w * h - 3 * y), x_idx);
     }
 }
 
