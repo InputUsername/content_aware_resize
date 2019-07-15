@@ -36,9 +36,13 @@ fn dump_energy_image(img: &[u8], w: usize, h: usize) -> io::Result<()> {
 fn content_aware_resize(img: &mut Vec<u8>, w: usize, h: usize, new_w: usize) {
     assert!(new_w < w);
 
+    let mut energy_buffer = seam::make_energy_buffer(w, h);
+
     let mut cur_w = w;
     while cur_w > new_w {
-        seam::remove_min_energy_seam(img, cur_w, h, energy_function::basic);
+        seam::remove_min_energy_seam(img, cur_w, h, energy_function::basic, &mut energy_buffer);
+
+        energy_buffer.clear();
 
         cur_w -= 1;
     }
