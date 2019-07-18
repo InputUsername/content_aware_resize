@@ -29,12 +29,12 @@ pub fn basic(img: &[u8], w: usize, h: usize, x: usize, y: usize) -> u32 {
     let mut sum = 0;
 
     for i in 0..3 {
-        let dh = abs_diff(ph1[i], ph2[i]) as u32;
-        let dv = abs_diff(pv1[i], pv2[i]) as u32;
+        let dh = u32::from(abs_diff(ph1[i], ph2[i]));
+        let dv = u32::from(abs_diff(pv1[i], pv2[i]));
 
         sum += dh * dh;
         sum += dv * dv;
     }
 
-    return sum;
+    sum
 }
