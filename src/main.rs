@@ -1,20 +1,20 @@
 mod energy_function;
 mod seam;
 
-use std::path::Path;
 use std::io;
-use std::time::{Instant, Duration};
+use std::path::Path;
+use std::time::{Duration, Instant};
 
-use image::{DynamicImage, ColorType};
+use image::{ColorType, DynamicImage};
 
-use clap::{App, Arg, crate_version};
+use clap::{crate_version, App, Arg};
 
 fn dump_energy_image(img: &[u8], w: usize, h: usize) -> io::Result<()> {
     let mut min = energy_function::basic(img, w, h, 0, 0);
     let mut max = min;
 
-    let energies: Vec<f32> =
-        (0..w*h).map(|i| (i % w, i / w))
+    let energies: Vec<f32> = (0..w * h)
+        .map(|i| (i % w, i / w))
         .map(|(x, y)| {
             let e = energy_function::basic(img, w, h, x, y);
             min = u32::min(min, e);
@@ -22,15 +22,22 @@ fn dump_energy_image(img: &[u8], w: usize, h: usize) -> io::Result<()> {
             e as f32
         })
         .collect();
-    
+
     let min = min as f32;
     let max = max as f32;
 
-    let output: Vec<u8> = energies.into_iter()
+    let output: Vec<u8> = energies
+        .into_iter()
         .map(|e| (255.0 * (e - min) / (max - min)) as u8)
         .collect();
 
-    image::save_buffer("images/energy.png", &output, w as u32, h as u32, ColorType::Gray(8))
+    image::save_buffer(
+        "images/energy.png",
+        &output,
+        w as u32,
+        h as u32,
+        ColorType::Gray(8),
+    )
 }
 
 fn content_aware_resize(img: &mut Vec<u8>, w: usize, h: usize, new_w: usize) {
@@ -81,24 +88,32 @@ fn main() {
         .version(crate_version!())
         .about("Resize images while taking their content into account")
         .author("Koen Bolhuis")
-        .arg(Arg::with_name("INPUT")
-            .help("The input image")
-            .required(true)
-            .index(1))
-        .arg(Arg::with_name("OUTPUT")
-            .help("The output file")
-            .required(true)
-            .index(2))
-        .arg(Arg::with_name("width")
-            .help("The new width of the result image")
-            .required(true)
-            .short("w")
-            .long("width")
-            .takes_value(true))
-        .arg(Arg::with_name("energy")
-            .help("Dump an image containing the energy of the input image")
-            .short("e")
-            .long("energy"))
+        .arg(
+            Arg::with_name("INPUT")
+                .help("The input image")
+                .required(true)
+                .index(1),
+        )
+        .arg(
+            Arg::with_name("OUTPUT")
+                .help("The output file")
+                .required(true)
+                .index(2),
+        )
+        .arg(
+            Arg::with_name("width")
+                .help("The new width of the result image")
+                .required(true)
+                .short("w")
+                .long("width")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("energy")
+                .help("Dump an image containing the energy of the input image")
+                .short("e")
+                .long("energy"),
+        )
         .get_matches();
 
     let input_file = matches.value_of("INPUT").unwrap();

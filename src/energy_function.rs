@@ -3,7 +3,11 @@
 //! of pixels with minimal total energy.
 
 fn abs_diff(a: u8, b: u8) -> u8 {
-    if a > b { a - b } else { b - a }
+    if a > b {
+        a - b
+    } else {
+        b - a
+    }
 }
 
 /// Returns the energy of a pixel based on the sum of squared
@@ -17,14 +21,14 @@ pub fn basic(img: &[u8], w: usize, h: usize, x: usize, y: usize) -> u32 {
     let offset_h = 3 * y * w;
     let h1 = offset_h + 3 * h1;
     let h2 = offset_h + 3 * h2;
-    let ph1 = &img[h1 .. h1 + 3];
-    let ph2 = &img[h2 .. h2 + 3];
+    let ph1 = &img[h1..h1 + 3];
+    let ph2 = &img[h2..h2 + 3];
 
     let offset_v = 3 * x;
     let v1 = 3 * v1 * w + offset_v;
     let v2 = 3 * v2 * w + offset_v;
-    let pv1 = &img[v1 .. v1 + 3];
-    let pv2 = &img[v2 .. v2 + 3];
+    let pv1 = &img[v1..v1 + 3];
+    let pv2 = &img[v2..v2 + 3];
 
     let mut sum = 0;
 
