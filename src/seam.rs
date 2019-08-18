@@ -1,3 +1,5 @@
+use crate::energy_function::EnergyFunction;
+
 use copy_in_place::copy_in_place;
 
 #[derive(Clone, Copy)]
@@ -22,7 +24,7 @@ pub fn find_min_energy_seam<F>(
     energy_buffer: &mut Vec<Energy>,
 ) -> Vec<usize>
 where
-    F: Fn(&[u8], usize, usize, usize, usize) -> u32,
+    F: EnergyFunction,
 {
     for x in 0..w {
         energy_buffer.push(Energy {
@@ -82,7 +84,7 @@ pub fn remove_min_energy_seam<F>(
     energy_function: F,
     energy_buffer: &mut Vec<Energy>,
 ) where
-    F: Fn(&[u8], usize, usize, usize, usize) -> u32,
+    F: EnergyFunction,
 {
     let seam = find_min_energy_seam(img, w, h, energy_function, energy_buffer);
 

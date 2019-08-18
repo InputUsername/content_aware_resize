@@ -2,6 +2,11 @@
 //! in an image in order to be able to find the seam
 //! of pixels with minimal total energy.
 
+/// Alias for an energy function. Energy functions take an image buffer, its width and height,
+/// and pixel x/y coordinates, and return the energy value of the pixel.
+pub trait EnergyFunction: Fn(&[u8], usize, usize, usize, usize) -> u32 {}
+impl<T: Fn(&[u8], usize, usize, usize, usize) -> u32> EnergyFunction for T {}
+
 fn abs_diff(a: u8, b: u8) -> u8 {
     if a > b {
         a - b
