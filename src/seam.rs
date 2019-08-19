@@ -14,8 +14,7 @@ pub fn make_energy_buffer(w: usize, h: usize) -> Vec<Energy> {
 
 /// Finds the (vertical) minimal energy seam as determined
 /// by `energy_function`. The resulting vector will contain
-/// the horizontal positions of the pixels making up the seam,
-/// in reverse order (bottom to top) of the image.
+/// the horizontal positions of the pixels making up the seam.
 pub fn find_min_energy_seam<F>(
     img: &[u8],
     w: usize,
@@ -56,8 +55,6 @@ where
         }
     }
 
-    let mut seam = Vec::with_capacity(h);
-
     let last_row_start = (h - 1) * w;
     let (mut seam_x_pos, _) = energy_buffer[last_row_start..]
         .iter()
@@ -65,8 +62,10 @@ where
         .min_by_key(|(_, e)| e.value)
         .unwrap();
 
+    let mut seam = vec![0; h];
+
     for y in (0..h).rev() {
-        seam.push(seam_x_pos);
+        seam[y] = seam_x_pos;
         seam_x_pos = energy_buffer[y * w + seam_x_pos].backptr;
     }
 
@@ -90,7 +89,7 @@ pub fn remove_min_energy_seam<F>(
 
     for y in 0..h {
         let row_start = 3 * y * (w - 1);
-        let x_idx = row_start + 3 * seam[h - 1 - y];
+        let x_idx = row_start + 3 * seam[y];
 
         assert!(x_idx <= 3 * w * h);
 
@@ -121,7 +120,7 @@ mod tests {
         let mut buffer = make_energy_buffer(W, H);
         let seam = find_min_energy_seam(&[], W, H, dummy_energy, &mut buffer);
 
-        assert_eq!(seam, [3, 4, 3, 2]);
+        assert_eq!(seam, [2, 3, 4, 3]);
     }
 
     #[test]
