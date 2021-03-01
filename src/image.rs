@@ -1,7 +1,7 @@
 use image::{DynamicImage, RgbImage, GrayImage};
 
 use crate::energy_function::EnergyFunction;
-use crate::seam::{EnergyMatrix, find_vertical_seam};
+use crate::seam::{EnergyMatrix, find_vertical_seam, find_horizontal_seam};
 
 /// Represents a content-aware-resizable image.
 pub struct Image {
@@ -75,6 +75,44 @@ impl Image {
         for cur_width in (new_width..self.width()).rev() {
             self.carve_vertical_seam(energy_function, &mut energy_matrix);
             self.width = cur_width;
+        }
+
+        let (wu, hu) = (self.width() as usize, self.height() as usize);
+        self.buffer.truncate(Self::CHANNELS * wu * hu);
+        self.buffer.shrink_to_fit();
+    }
+
+    fn carve_horizontal_seam<F: EnergyFunction>(
+        &mut self,
+        energy_function: F,
+        energy_matrix: &mut EnergyMatrix,
+    ) {
+        let seam = find_horizontal_seam(self, energy_function, energy_matrix);
+
+        let (wu, hu) = (self.width() as usize, self.height() as usize);
+
+        for x in 0..wu {
+            let seam_y_pos = seam[wu - 1 - x];
+            for y in seam_y_pos..(hu - 1) {
+                let a = Self::CHANNELS * (y * wu + x);
+                let b = Self::CHANNELS * ((y + 1) * wu + x);
+
+                self.buffer[a] = self.buffer[b];
+            }
+        }
+    }
+
+    /// Resize this image vertically based on an energy function.
+    pub fn resize_vertical<F: EnergyFunction + Copy>(
+        &mut self,
+        new_height: u32,
+        energy_function: F,
+    ) {
+        let mut energy_matrix = EnergyMatrix::new(self);
+
+        for cur_height in (new_height..self.height()).rev() {
+            self.carve_horizontal_seam(energy_function, &mut energy_matrix);
+            self.height = cur_height;
         }
 
         let (wu, hu) = (self.width() as usize, self.height() as usize);
