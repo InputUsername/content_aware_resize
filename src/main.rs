@@ -55,7 +55,17 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .short("w")
                 .long("width")
                 .takes_value(true)
-                .required_unless("energy"),
+                .required_unless("energy")
+                .conflicts_with("height"),
+        )
+        .arg(
+            Arg::with_name("height")
+                .help("The new height")
+                .short("h")
+                .long("height")
+                .takes_value(true)
+                .required_unless("energy")
+                .conflicts_with("width"),
         )
         .arg(
             Arg::with_name("energy")
@@ -84,20 +94,39 @@ fn main() -> Result<(), Box<dyn Error>> {
     print_duration(start.elapsed());
     println!();
 
-    // Resize image
+    // Resize horizontally
 
-    print!("Resizing horizontally...");
-    stdout.flush()?;
+    if let Some(new_width) = arg_matches.value_of("width") {
+        print!("Resizing horizontally...");
+        stdout.flush()?;
 
-    let start = Instant::now();
+        let start = Instant::now();
 
-    let new_width = arg_matches.value_of("width").unwrap().parse()?;
+        let new_width = new_width.parse()?;
 
-    img.resize_horizontal(new_width, energy_function::basic);
+        img.resize_horizontal(new_width, energy_function::basic);
 
-    print!(" Finished in ");
-    print_duration(start.elapsed());
-    println!();
+        print!(" Finished in ");
+        print_duration(start.elapsed());
+        println!();
+    }
+
+    // Resize vertically
+
+    if let Some(new_height) = arg_matches.value_of("height") {
+        print!("Resizing vertically...");
+        stdout.flush()?;
+
+        let start = Instant::now();
+
+        let new_height = new_height.parse()?;
+
+        img.resize_vertical(new_height, energy_function::basic);
+
+        print!(" Finished in ");
+        print_duration(start.elapsed());
+        println!();
+    }
 
     // Dump energy
 
@@ -124,7 +153,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     let output_path = if let Some(path) = arg_matches.value_of("output") {
         path.to_string()
     } else {
-        let output_file_name = format!("{}_resized", input_file_name);
+        let output_file_name =
+            format!("{}_{}x{}", input_file_name, img.width(), img.height());
         let mut output_path = input_path.with_file_name(output_file_name);
         output_path.set_extension("png");
         output_path.to_string_lossy().into_owned()
