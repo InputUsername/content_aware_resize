@@ -43,7 +43,7 @@ impl Image {
         let (x, y) = (x as usize, y as usize);
         let wu = self.width() as usize;
         let idx = Self::CHANNELS * (y * wu + x);
-        &self.buffer[idx..idx + Self::CHANNELS]
+        &self.buffer[idx..(idx + Self::CHANNELS)]
     }
 
     fn carve_vertical_seam<F: EnergyFunction>(
@@ -58,9 +58,9 @@ impl Image {
         for y in 0..hu {
             let row_start = Self::CHANNELS * y * (wu - 1);
             let x_idx = row_start + Self::CHANNELS * seam[hu - 1 - y];
-            let next_row_start = Self::CHANNELS * (y + 1) * (wu - 1);
 
-            self.buffer.copy_within(x_idx + Self::CHANNELS..next_row_start, x_idx);
+            // TODO: this can be optimized as not the entire buffer needs to be copied
+            self.buffer.copy_within((x_idx + Self::CHANNELS).., x_idx);
         }
     }
 
