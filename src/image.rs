@@ -94,10 +94,12 @@ impl Image {
         for x in 0..wu {
             let seam_y_pos = seam[wu - 1 - x];
             for y in seam_y_pos..(hu - 1) {
-                let a = Self::CHANNELS * (y * wu + x);
-                let b = Self::CHANNELS * ((y + 1) * wu + x);
+                let dest = Self::CHANNELS * (y * wu + x);
+                let src = Self::CHANNELS * ((y + 1) * wu + x);
 
-                self.buffer[a] = self.buffer[b];
+                for channel in 0..Self::CHANNELS {
+                    self.buffer[dest + channel] = self.buffer[src + channel];
+                }
             }
         }
     }
